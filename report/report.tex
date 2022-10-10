@@ -1,0 +1,67 @@
+\documentclass[UTF8]{article}
+% Template based on https://www.overleaf.com/latex/templates/assignment-template/fwycphfzpshm
+
+\usepackage[authoryear]{natbib}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[margin=1in]{geometry}
+
+\title{CS475 Fall 2022 Homework 3}
+\author{
+  Team 0:  % team no
+  Juhee Son, Rifki Afina Putri, and Alice Oh  % your names
+}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+BERT~\cite{devlin-etal-2019-bert} has become a standard architecture for NLP research ever since it was published. BERT computes the representation for every token, but for sentence-level tasks (e.g., sentiment analysis), we usually use the output representation of the special token \texttt{[CLS]}. Is this the best way to pool token-level representations to create the sentence-level representation?
+
+In this homework, your team will implement and compare different techniques for pooling token-level representation in BERT, namely \texttt{BERTPooler} in \texttt{huggingface} library (\url{https://huggingface.co/}).
+
+\section{Tasks}
+
+One simple pooling method is to apply permutation-invariant operations (e.g., mean, max, sum) across all token representations. We define the output representation of \texttt{MeanMaxTokens} (shortly MMT) as:
+\begin{align}
+  C_{\text{MMT}} = \left[
+    \textstyle \sum_{i=0}^{L - 1} T_{i}\ ||\ \max_i T_{i}
+  \right],\quad
+   C_{\text{MMT}} \in \mathbb{R}^{2H},\quad
+   T_i \in \mathbb{R}^{H},
+\end{align}
+where $L$ is the maximum length of sequence and $||$ is the vector concatenation operation. Note that we borrow notations from the original BERT paper~\cite{devlin-etal-2019-bert}. 
+
+The \texttt{BERTPooler} in \texttt{huggingface} implementation applies linear transformation with $W \in \mathbb{R}^{H \times H}$ and $\tanh$ activation (See \texttt{BertPooler} class). Similarly, we apply linear transformation with $W_{\text{MMT}} \in \mathbb{R}^{H \times 2H}$ and $\tanh$ activation.
+\begin{align}
+  C = \tanh(C_{\text{MMT}}W_{\text{MMT}}^\top),\ C \in \mathbb{R}^{H}
+\end{align}
+
+The tasks in this homework are as follows:
+\begin{enumerate}
+  \item Implement the \texttt{MeanMaxTokens} pooler (See \texttt{MeanMaxTokensBertPooler} class in \texttt{bert\_poolers.py}).
+  \item Implement your own BERT pooler (See \texttt{MyBertPooler} class) and describe its architecture and rationale in your report. It does not have to be completely novel.
+  \item Choose one dataset in GLUE~\cite{wang2018glue}, and compare the test performance of three poolers (See \texttt{run\_glue.py}).
+  \item Discuss the result. Negative results are fine, the point is how you interpret and explain it.
+\end{enumerate}
+
+\section{Submission}
+
+The files you should submit are
+\begin{enumerate}
+  \item Your team's \texttt{bert\_poolers\_\{team\_no\}.py} (e.g, \texttt{bert\_poolers\_0.py}).
+  \item Your team's two-page \texttt{report\_\{team\_no\}.pdf} (e.g., \texttt{report\_0.pdf}). Use this \LaTeX\ file as a template, and do not change style attributes in this file. References are not included in the page-limit.
+\end{enumerate}
+
+
+\section{Grading}
+
+Comprehensive evaluation based on clarity, validity, and interestingness. You will get zero points if you violate academic integrity (e.g., plagiarism and data manipulation).
+
+
+\pagebreak
+\bibliographystyle{plain}
+\bibliography{report}
+
+\end{document}
