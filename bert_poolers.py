@@ -10,10 +10,16 @@ from transformers.models.bert.modeling_bert import (
 class MeanMaxTokensBertPooler(nn.Module):
     def __init__(self, config):
         super().__init__()
-        raise NotImplementedError
+        self.dense = nn.Linear(2*config.hidden_size, config.hidden_size)
+        self.activation = nn.Tanh()
 
     def forward(self, hidden_states, *args, **kwargs):
-        raise NotImplementedError
+        mean_tokens = torch.mean(hidden_states, 1) # (B, L, H) -> (B, H)
+        max_tokens = torch.max(hidden_states, 1) # (B, L, H) -> (B, H)
+        pooled_output = torch.cat((mean_tokens, max_tokens), 1) # (B, H) -> (B, 2H)
+        pooled_output = self.dense(pooled_output)
+        pooled_output = self.activation(pooled_output)
+        return pooled_output
 
 
 class MyBertPooler(nn.Module):
