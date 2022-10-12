@@ -97,10 +97,10 @@ class MyBertForSequenceClassification(BertForSequenceClassification):
             output_hidden_states=None,
             return_dict=None,
     ):
-        if self.bert.pooling_layer_type in ["CLS", "MEAN_MAX"]:
+        if self.bert.pooling_layer_type in ["CLS", "MEAN_MAX", "MINE"]:
             return super().forward(
                 input_ids, attention_mask, token_type_ids, position_ids, head_mask,
                 inputs_embeds, labels, output_attentions, output_hidden_states, return_dict
             )
         else:
-            raise NotImplementedError
+            raise Exception(f"Wrong pooling layer type: {self.bert.pooling_layer_type}")
