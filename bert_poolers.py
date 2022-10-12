@@ -31,12 +31,10 @@ class MyBertPooler(nn.Module):
 
     def forward(self, hidden_states, *args, **kwargs):
         hidden_states = self.attention_pooler(hidden_states)[0]
-        # min_tokens = torch.min(hidden_states, 1)[0]
-        max_tokens = torch.max(hidden_states, 1)[0]
-        # min_max_avg_tokens = (min_tokens + max_tokens) / 2
-        first_token = hidden_states[:, 0]
-        pooled_output = torch.cat((first_token, max_tokens), 1)
-        pooled_output = self.new_dense(pooled_output)
+        first_token = hidden_states[:, 0] # get CLS
+        avg_of_word_tokens = torch.mean(hidden_states[:,1:]) # get avg of word representations
+        new_result = torch.cat((first_token, avg_of_word_tokens), 1) # concat above tensors
+        pooled_output = self.new_dense(new_result)
         pooled_output = self.new_activation(pooled_output)
         return pooled_output
 
