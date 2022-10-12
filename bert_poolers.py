@@ -3,7 +3,7 @@ import torch.nn as nn
 from transformers import BertConfig
 from transformers.models.bert.modeling_bert import (
     BertPreTrainedModel, BertModel,
-    BertEmbeddings, BertEncoder, BertForSequenceClassification, BertPooler,
+    BertEmbeddings, BertEncoder, BertForSequenceClassification, BertPooler, BertAttention
 )
 
 
@@ -15,7 +15,7 @@ class MeanMaxTokensBertPooler(nn.Module):
 
     def forward(self, hidden_states, *args, **kwargs):
         mean_tokens = torch.mean(hidden_states, 1) # (B, L, H) -> (B, H)
-        max_tokens = torch.max(hidden_states, 1) # (B, L, H) -> (B, H)
+        max_tokens = torch.max(hidden_states, 1)[0] # (B, L, H) -> (B, H)
         pooled_output = torch.cat((mean_tokens, max_tokens), 1) # (B, H) -> (B, 2H)
         pooled_output = self.new_dense(pooled_output)
         pooled_output = self.new_activation(pooled_output)
@@ -25,10 +25,21 @@ class MeanMaxTokensBertPooler(nn.Module):
 class MyBertPooler(nn.Module):
     def __init__(self, config):
         super().__init__()
-        raise NotImplementedError
+        self.new_dense = nn.Linear(2*config.hidden_size, config.hidden_size)
+        self.new_activation = nn.Tanh()
+        self.attention_pooler = BertAttention(config)
 
     def forward(self, hidden_states, *args, **kwargs):
-        raise NotImplementedError
+        hidden_states = self.attention_pooler(hidden_states)[0]
+        # min_tokens = torch.min(hidden_states, 1)[0]
+        max_tokens = torch.max(hidden_states, 1)[0]
+        # min_max_avg_tokens = (min_tokens + max_tokens) / 2
+        first_token = hidden_states[:, 0]
+        pooled_output = torch.cat((first_token, max_tokens), 1)
+        pooled_output = self.new_dense(pooled_output)
+        pooled_output = self.new_activation(pooled_output)
+        return pooled_output
+
 
 
 class MyBertConfig(BertConfig):
